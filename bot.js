@@ -4,15 +4,6 @@ require("isomorphic-fetch")
 const client = new Discord.Client({ intents: ["GuildMessages", "Guilds", "GuildVoiceStates", "MessageContent"] });
 const config = require("./config.json")
 
-function getUuid (input) {
-    let a = ""
-    a = ""
-    let b = atob(input)
-    for (let i = 0; i < b.length; i++) {
-        a += Number(b.charCodeAt(i)).toString(16).padStart(2, '0')
-    }
-    return a
-}
 
 function getUuidFromName (playername) {
     return fetch(`https://api.mojang.com/users/profiles/minecraft/${playername}`)
@@ -31,19 +22,6 @@ function loadUsers () {
 
 function write (input) {
     fs.writeFileSync("./users.json", JSON.stringify(input))
-}
-
-function sleep (ms) {
-    return new Promise(resolve => setTimeout(resolve, ms));
-}
-
-function badFind (input, arr) {
-    let i = 0;
-    let returnr = false
-    for (i = 0; i < arr.length; i++) {
-        if (arr[i] == input) return returnr = true
-    }
-    return returnr
 }
 
 client.on("ready", () => console.log(`Lobby manager interactive client logged in to ${client.user.tag}!`))
@@ -131,15 +109,12 @@ client.on("messageCreate", async message => {
 
     if (command == "send") {
         let check = users.authorized.find(user => user == message.author.id)
-        if (!check) return
-        if (args[0]) {
-            if (args[0] == "log") {
-                message.channel.send({ files: ["log.txt"] })
-            } else if (args[0] == "chat") {
-                message.channel.send({ files: ["chat.txt"] })
-            } else {
-                message.channel.send("Invalid command.")
-            }
+        if (!(check && args[0])) return
+
+        if (args[0] == "log" || args[0] == "chat") {
+            message.channel.send({ files: [`${args[0]}.txt`] })
+        } else {
+            message.channel.send("Invalid command.")
         }
 
     }
