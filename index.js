@@ -6,7 +6,8 @@ const fs = require("fs")
 const Discord = require("discord.js")
 const config = require("./config.json")
 const { spawn } = require("child_process")
-
+const crypto = require("crypto")
+const { assert } = require("console")
 
 const client = new Discord.Client({ intents: ["GuildMessages", "Guilds", "GuildVoiceStates", "MessageContent"] });
 const app = require("express")()
@@ -85,13 +86,21 @@ function bold (uuid) {
     return a
 }
 
+function checkSignature (data, signature) {
+    typeof data !== "string" && (data = JSON.stringify(data))
+    return crypto.createHash("sha1").update(data + "279140415844249291319396851621663933443").digest("hex") === signature
+}
+
 app.get("/", (req, res) => {
     res.send("Nothing to see here...")
 })
 
 app.post('/updateUsers', bodyParser.json({ extended: false }), async (req, res) => {
     let players = req.body.data,
-        lobby = req.body.lobby ?? "N/A"
+        lobby = req.body.lobby ?? "N/A",
+        sig = req.body.signature
+
+    assert(checkSignature(req.body, sig), "Invalid signature")
 
     let {users, _channel} = loadUsers()
     for (let i = 0; i < players.length; i++) {
